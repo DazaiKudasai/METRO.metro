@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<!-- ════════════════════════════════════
+     СТРАНИЦА ИГРЫ — METRO: LAST LIGHT
+     Структура: HEAD → СТИЛИ → ТЕЛО → СКРИПТЫ
+════════════════════════════════════ -->
+<html lang="ru">
+<head>
+  <!-- Кодировка и масштаб для мобильных -->
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Metro: Last Light — Последний Свет</title>
+  <!-- Шрифты: Bebas Neue (заголовки), Oswald (текст), Share Tech Mono (метки) -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── ПЕРЕМЕННЫЕ ЦВЕТОВ ──
+       --accent: оранжевый — акцентный цвет этой страницы */
+    :root{--bg:#0a0804;--surface:#110f0a;--card:#16130e;--amber:#c8822a;--amber-light:#e8a045;--amber-dim:#7a4f18;--red:#8b1a1a;--text:#d4c4a0;--text-dim:#8a7a60;--border:#2a2318;--accent:#e67e22}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    /* ── ТЕЛО СТРАНИЦЫ ── Курсор: SVG-прицел цвета #e67e22 */
+    body{background:var(--bg);color:var(--text);font-family:'Oswald',sans-serif;font-weight:300;overflow-x:hidden;cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='10' cy='10' r='4' fill='none' stroke='%23e67e22' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='10' r='1' fill='%23e67e22'/%3E%3C/svg%3E") 10 10, crosshair;}
+    /* Зернистость поверх страницы */
+    body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");background-size:160px;opacity:.35;mix-blend-mode:overlay}
+    /* Сканлайны (горизонтальные полосы) */
+    body::after{content:'';position:fixed;inset:0;z-index:9998;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px)}
+    /* ── НАВИГАЦИЯ ── */
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:1.2rem 6vw;background:rgba(10,8,4,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:.12em;color:var(--amber);text-decoration:none}
+    .nav-links{display:flex;gap:1.8rem;list-style:none}
+    .nav-links a{font-family:'Share Tech Mono';font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);text-decoration:none;transition:color .2s}
+    .nav-links a:hover{color:var(--amber)}
+    /* Кнопка "← На главную" */
+    .nav-back{font-family:'Share Tech Mono';font-size:.7rem;letter-spacing:.15em;color:var(--amber-dim);text-decoration:none;transition:color .2s}
+    .nav-back:hover{color:var(--amber)}
+    /* ── HERO-СЕКЦИЯ ── Обложка справа, текст слева */
+    .game-hero{position:relative;min-height:100vh;display:flex;align-items:flex-end;padding:80px 6vw 8vh;overflow:hidden}
+    .game-hero-bg{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,#0a0703 0%,#0d0b07 60%,#0a0804 100%)}
+    .hero-cover{position:absolute;right:0;top:0;height:100%;width:80%;object-fit:cover;object-position:top;opacity:.50;filter:saturate(.6)}
+    .hero-cover-grad{position:absolute;inset:0;background:linear-gradient(90deg,#0a0803 20%,rgba(10,8,3,.5) 70%,rgba(10,8,3,.15) 100%)}
+    .game-hero-content{position:relative;z-index:2;max-width:600px}
+    /* Бейдж с годом и студией */
+    .game-badge{display:inline-block;padding:.3rem 1rem;background:var(--accent);color:#fff;font-family:'Share Tech Mono';font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.5rem}
+    /* Огромный заголовок с анимацией */
+    .game-title{font-family:'Bebas Neue';font-size:clamp(3.5rem,10vw,8rem);line-height:.85;letter-spacing:.04em;color:var(--text);margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .3s forwards}
+    .game-title span{color:var(--accent);display:block}
+    /* Строка метаданных: жанр, платформы и т.д. */
+    .game-meta{display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:2rem;opacity:0;animation:fadeUp .8s .6s forwards}
+    .meta-item{display:flex;flex-direction:column;gap:.3rem}
+    .meta-label{font-family:'Share Tech Mono';font-size:.6rem;letter-spacing:.2em;color:var(--amber-dim);text-transform:uppercase}
+    .meta-value{font-size:.95rem;color:var(--text);letter-spacing:.05em}
+    .game-tagline{font-size:1.1rem;color:var(--text-dim);line-height:1.7;margin-bottom:2.5rem;opacity:0;animation:fadeUp .8s .8s forwards}
+    .btn-back{display:inline-flex;align-items:center;gap:.5rem;padding:.8rem 2rem;border:1px solid var(--amber-dim);color:var(--amber);font-family:'Oswald';font-size:.9rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:all .2s;opacity:0;animation:fadeUp .8s 1s forwards}
+    .btn-back:hover{border-color:var(--amber);background:rgba(200,130,42,.1)}
+    /* Анимация появления снизу вверх */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
+    /* ── БАЗОВЫЕ ОТСТУПЫ ДЛЯ РАЗДЕЛОВ ── */
+    .content-section{padding:6rem 6vw}
+    .section-label{font-family:'Share Tech Mono';font-size:.7rem;letter-spacing:.35em;color:var(--amber-dim);text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:1rem}
+    .section-label::before{content:'';width:40px;height:1px;background:var(--amber-dim)}
+    .section-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,6vw,4.5rem);letter-spacing:.05em;line-height:.9;margin-bottom:2.5rem;color:var(--text)}
+    /* ── ТЕКСТ ИСТОРИИ И ЛОРА ── */
+    .lore-full{max-width:800px}
+    .lore-full p{font-size:1rem;line-height:1.9;color:var(--text-dim);margin-bottom:1.5rem}
+    .lore-full p strong{color:var(--amber);font-weight:600}
+    .lore-full h3{font-family:'Bebas Neue';font-size:2rem;letter-spacing:.05em;color:var(--text);margin:2.5rem 0 1rem}
+    .divider{width:100%;height:1px;background:linear-gradient(to right,var(--amber-dim),transparent);margin:2.5rem 0;opacity:1}
+    /* ── СЕТКА КАРТОЧЕК ПЕРСОНАЖЕЙ ── */
+    .chars-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px}
+    .char-card{background:var(--card);padding:2rem;border-top:2px solid transparent;transition:border-color .3s,background .3s}
+    .char-card:hover{border-top-color:var(--accent);background:#1c180f}
+    .char-icon{font-size:2rem;margin-bottom:1rem}
+    .char-name{font-family:'Bebas Neue';font-size:1.6rem;color:var(--accent);letter-spacing:.06em;margin-bottom:.5rem}
+    .char-role{font-family:'Share Tech Mono';font-size:.65rem;letter-spacing:.2em;color:var(--amber-dim);text-transform:uppercase;margin-bottom:.75rem}
+    .char-desc{font-size:.85rem;color:var(--text-dim);line-height:1.7}
+    /* ── СПИСОК КЛЮЧЕВЫХ ГЛАВ ── */
+    .chapters-list{display:flex;flex-direction:column;gap:2px}
+    .chapter-item{background:var(--card);padding:1.75rem 2rem;display:flex;gap:2rem;align-items:flex-start;transition:background .3s}
+    .chapter-item:hover{background:#1c180f}
+    .chapter-num{font-family:'Bebas Neue';font-size:3rem;color:var(--accent);opacity:.3;line-height:1;flex-shrink:0;width:60px}
+    .chapter-title{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.06em;color:var(--text);margin-bottom:.5rem}
+    .chapter-desc{font-size:.85rem;color:var(--text-dim);line-height:1.6}
+    /* ── СЕТКА КОНЦОВОК ── */
+    .endings-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+    .ending-card{background:var(--card);padding:2.5rem;position:relative;overflow:hidden}
+    /* Цветная линия сверху карточки концовки */
+    .ending-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .ending-bad::before{background:linear-gradient(to right,#e74c3c,#7f1a1a)}
+    .ending-good::before{background:linear-gradient(to right,#27ae60,#2ecc71)}
+    .ending-type{font-family:'Share Tech Mono';font-size:.65rem;letter-spacing:.25em;color:var(--amber-dim);text-transform:uppercase;margin-bottom:.75rem}
+    .ending-title{font-family:'Bebas Neue';font-size:2rem;letter-spacing:.05em;margin-bottom:1rem}
+    .ending-bad .ending-title{color:#e74c3c}
+    .ending-good .ending-title{color:#27ae60}
+    .ending-desc{font-size:.9rem;color:var(--text-dim);line-height:1.75}
+    /* ── НИЖНЯЯ НАВИГАЦИЯ ── */
+    .page-footer{background:#060503;padding:3rem 6vw;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+    .footer-nav a{font-family:'Share Tech Mono';font-size:.7rem;letter-spacing:.15em;color:var(--text-dim);text-decoration:none;text-transform:uppercase;transition:color .2s;margin-left:2rem}
+    .footer-nav a:hover{color:var(--amber)}
+    .footer-copy{font-family:'Share Tech Mono';font-size:.65rem;letter-spacing:.15em;color:var(--text-dim)}
+    /* Скрытые элементы — .visible добавляется JS при появлении на экране */
+    .reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+    .reveal.visible{opacity:1;transform:none}
+    @media(max-width:700px){.endings-grid{grid-template-columns:1fr}.hero-cover{width:100%;opacity:.15}}
+  </style>
+</head>
+<body>
+
+<!-- ════ НАВИГАЦИЯ ════ -->
+<nav>
+  <a href="index.html" class="nav-logo">МЕТРО</a>
+  <ul class="nav-links">
+    <li><a href="metro2033.html">2033</a></li>
+    <li><a href="lastlight.html" style="color:var(--accent)">Last Light</a></li>
+    <li><a href="exodus.html">Exodus</a></li>
+  </ul>
+  <a href="index.html" class="nav-back">← На главную</a>
+</nav>
+
+
+<!-- ════ HERO ════
+     hero-cover: обложка игры (справа, полупрозрачная)
+     hero-cover-grad: затемнение для читаемости текста -->
+<div class="game-hero">
+  <div class="game-hero-bg"></div>
+  <img class="hero-cover"
+    src="img/maxresdefault.jpg"
+    alt="Metro Last Light Cover"
+    onerror="this.style.display='none'">
+  <div class="hero-cover-grad"></div>
+  <div class="game-hero-content">
+    <div class="game-badge">2013 · Deep Silver · 4A Games</div>
+    <h1 class="game-title">Metro:<span>Last Light</span></h1>
+    <div class="game-meta">
+      <div class="meta-item"><div class="meta-label">Жанр</div><div class="meta-value">Шутер / Стелс</div></div>
+      <div class="meta-item"><div class="meta-label">Платформы</div><div class="meta-value">PC · PS3 · Xbox 360</div></div>
+      <div class="meta-item"><div class="meta-label">Redux</div><div class="meta-value">2014</div></div>
+      <div class="meta-item"><div class="meta-label">Год действия</div><div class="meta-value">2034</div></div>
+    </div>
+    <p class="game-tagline">Год после событий Metro 2033. Артём жив, но несёт груз вины. Единственный выживший Тёмный найден — и именно он становится ключом к будущему человечества.</p>
+    <a href="index.html" class="btn-back">← Все игры</a>
+  </div>
+</div>
+
+
+<!-- ════ ЛОР И ИСТОРИЯ ════ -->
+<div class="content-section" style="background:var(--surface)">
+  <div class="section-label">История</div>
+  <div class="lore-full reveal">
+    <h2 class="section-title">Лор Metro: Last Light</h2>
+    <p>События разворачиваются в <strong>2034 году</strong> — год спустя после уничтожения логова Тёмных. Артём теперь рейнджер Ордена, но не может избавиться от чувства, что совершил непоправимую ошибку. Метро погрязло в политических интригах, и никому нет дела до истинной угрозы.</p>
+    <div class="divider"></div>
+    <h3>Последний Тёмный</h3>
+    <p>Полковник Миллер сообщает Артёму: один <strong>маленький Тёмный</strong> выжил. Он был обнаружен разведкой Ордена. Миллер приказывает уничтожить его — как потенциальную угрозу. Артём отправляется на миссию, но вместо этого оказывается захвачен шпионом Красной линии.</p>
+    <p>Красная линия и Рейх готовят войну за контроль над <strong>оружием Д-6</strong> — секретным советским бункером, набитым ядерным арсеналом. Тот, кто получит Д-6, получит власть над всем метро.</p>
+    <div class="divider"></div>
+    <h3>Павел и Анна</h3>
+    <p>В плену у Красной линии Артём встречает своего старого знакомого <strong>Павла</strong> — офицера коммунистов. Но политика метро жестока: Павла предают свои же. Артём сбегает и встречает <strong>Анну</strong> — дочь Миллера и лучшего снайпера Ордена.</p>
+    <p>Между Артёмом и Анной вспыхивают чувства. Она становится его союзником и со временем — <strong>женой</strong>. Их отношения — один из немногих тёплых лучей в холодном мире подземелья.</p>
+    <div class="divider"></div>
+    <h3>Путь к пониманию</h3>
+    <p>На протяжении всей игры маленький Тёмный сопровождает Артёма — невидимо или в видениях. Постепенно герой понимает: существо не опасно. Оно хочет помочь. Оно <strong>разумно</strong>.</p>
+    <p>Финал игры определяется выборами игрока. Главный вопрос: можно ли остановить войну и дать Тёмным шанс? Или ненависть и страх снова победят разум?</p>
+  </div>
+</div>
+
+
+<!-- ════ ПЕРСОНАЖИ ════ -->
+<div class="content-section">
+  <div class="section-label">Персонажи</div>
+  <h2 class="section-title reveal">Лица Last Light</h2>
+  <div class="chars-grid">
+    <div class="char-card reveal">
+      <div class="char-icon">⚡</div>
+      <div class="char-name">Артём</div>
+      <div class="char-role">Рейнджер Ордена</div>
+      <p class="char-desc">Повзрослевший герой. Несёт груз решений 2033 года. Теперь рейнджер, но внутри — всё тот же сомневающийся юноша с ВДНХ.</p>
+    </div>
+    <div class="char-card reveal" style="transition-delay:.08s">
+      <div class="char-icon">🎯</div>
+      <div class="char-name">Анна</div>
+      <div class="char-role">Снайпер Ордена · Дочь Миллера</div>
+      <p class="char-desc">Лучший стрелок Ордена. Независимая, острая на язык. Сначала высмеивает Артёма, но постепенно влюбляется. Станет его женой.</p>
+    </div>
+    <div class="char-card reveal" style="transition-delay:.16s">
+      <div class="char-icon">👊</div>
+      <div class="char-name">Полковник Мельник</div>
+      <div class="char-role">Командир Ордена</div>
+      <p class="char-desc">Суровый, волевой командир. Прагматик, готовый пожертвовать всем ради выживания метро. Но в финале должен сделать выбор — власть или жизнь дочери.</p>
+    </div>
+    <div class="char-card reveal" style="transition-delay:.24s">
+      <div class="char-icon">👶</div>
+      <div class="char-name">Маленький Тёмный</div>
+      <div class="char-role">Последний выживший</div>
+      <p class="char-desc">Единственный уцелевший после бомбардировки. Разумен, любопытен, не агрессивен. Его жизнь и смерть определяет будущее обоих видов.</p>
+    </div>
+    <div class="char-card reveal" style="transition-delay:.32s">
+      <div class="char-icon">🎭</div>
+      <div class="char-name">Павел</div>
+      <div class="char-role">Офицер Красной Линии</div>
+      <p class="char-desc">Возвращается из Metro 2033. Двойственный персонаж — верен идеологии, но его предают свои. Трагичная фигура жертвы системы.</p>
+    </div>
+    <div class="char-card reveal" style="transition-delay:.4s">
+      <div class="char-icon">👁</div>
+      <div class="char-name">Лесницкий</div>
+      <div class="char-role">Генерал Красной Линии</div>
+      <p class="char-desc">Главный антагонист. Готов развязать войну за Д-6. Бывший союзник Миллера, ставший предателем ради власти и идеологии.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ КЛЮЧЕВЫЕ ГЛАВЫ ════ -->
+<div class="content-section" style="background:var(--surface)">
+  <div class="section-label">Ключевые главы</div>
+  <h2 class="section-title reveal">Путь Артёма</h2>
+  <div class="chapters-list">
+    <div class="chapter-item reveal">
+      <div class="chapter-num">01</div>
+      <div><div class="chapter-title">Пленник</div><div class="chapter-desc">Артём захвачен. Плен у Красной Линии. Шпион Гитлер передаёт его врагам. Первый побег, первые союзники.</div></div>
+    </div>
+    <div class="chapter-item reveal">
+      <div class="chapter-num">02</div>
+      <div><div class="chapter-title">Шахты и Болото</div><div class="chapter-desc">Артём и Тёмный блуждают через заброшенные уровни. Первые видения, первый контакт — маленькое существо не нападает.</div></div>
+    </div>
+    <div class="chapter-item reveal">
+      <div class="chapter-num">03</div>
+      <div><div class="chapter-title">Выставка</div><div class="chapter-desc">Станция-музей старого мира. Артём видит, что было до войны. Экспонаты, фотографии, кинохроника — и ощущение огромной утраты.</div></div>
+    </div>
+    <div class="chapter-item reveal">
+      <div class="chapter-num">04</div>
+      <div><div class="chapter-title">Красные Кварталы</div><div class="chapter-desc">Сердце Красной Линии. Пропаганда, праздник победы и скрытые казни. Миллер принимает решение, которое изменит всё.</div></div>
+    </div>
+    <div class="chapter-item reveal">
+      <div class="chapter-num">05</div>
+      <div><div class="chapter-title">Д-6 — Финал</div><div class="chapter-desc">Последняя битва. Красная Линия рвётся к бункеру. Тёмный рядом. Артём должен решить: победа любой ценой или надежда на новое начало.</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ КОНЦОВКИ ════
+     ending-bad: красная полоска сверху
+     ending-good: зелёная полоска сверху -->
+<div class="content-section">
+  <div class="section-label">Концовки</div>
+  <h2 class="section-title reveal">Два Пути</h2>
+  <div class="endings-grid reveal">
+    <div class="ending-card ending-bad">
+      <div class="ending-type">Плохая концовка</div>
+      <div class="ending-title">Жертва</div>
+      <p class="ending-desc">Артём жертвует собой — взрывает Д-6 вместе с армией Красной Линии. Метро спасено от войны, но ценой жизни Артёма. Маленький Тёмный улетает один. Анна теряет мужа. Надежды на союз двух видов нет.</p>
+    </div>
+    <div class="ending-card ending-good">
+      <div class="ending-type">Хорошая концовка</div>
+      <div class="ending-title">Рассвет</div>
+      <p class="ending-desc">Если собрать моральные очки — Тёмные возвращаются. Целая стая существ уничтожает армию Красной Линии. Артём выживает. Маленький Тёмный прощается — и улетает к своим. Впервые за двадцать лет есть настоящая надежда.</p>
+    </div>
+  </div>
+</div>
+
+<div class="page-footer">
+  <a href="metro2033.html" style="font-family:'Share Tech Mono';font-size:.7rem;letter-spacing:.15em;color:var(--amber-dim);text-decoration:none">← Metro 2033</a>
+  <div class="footer-nav">
+    <a href="exodus.html">Следующая: Exodus →</a>
+  </div>
+  <span class="footer-copy">© МЕТРО — ФАН САЙТ</span>
+</div>
+
+<script>
+
+/* ── JAVASCRIPT ──
+   IntersectionObserver следит за элементами .reveal
+   Когда элемент виден — добавляет класс .visible (анимация появления) */
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');obs.unobserve(x.target);}})},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>

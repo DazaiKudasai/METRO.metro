@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<!-- ════════════════════════════════════════════════
+     ГЛАВНАЯ СТРАНИЦА — METRO 2033 ФАН-САЙТ
+     Структура: HEAD → СТИЛИ → ТЕЛО → СКРИПТЫ
+════════════════════════════════════════════════ -->
+<html lang="ru">
+<head>
+  <!-- Кодировка и масштаб для мобильных устройств -->
+  <meta charset="UTF-8" />
+  <!-- Адаптация под экраны телефонов и планшетов -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>МЕТРО — Выжить. Любой ценой.</title>
+  <!-- Подключение шрифтов с Google Fonts:
+       Bebas Neue — заголовки
+       Oswald — основной текст
+       Share Tech Mono — технические надписи -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+
+    /* ══════════════════════════════════════
+       ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ЦВЕТОВ
+       Используются по всему сайту как var(--имя)
+    ══════════════════════════════════════ */
+    :root {
+      --bg: #0a0804;        /* Основной фон — почти чёрный с коричневым оттенком */
+      --surface: #110f0a;   /* Фон секций — чуть светлее основного */
+      --card: #16130e;      /* Фон карточек */
+      --amber: #c8822a;     /* Янтарный — главный акцентный цвет */
+      --amber-light: #e8a045; /* Светлый янтарный — для hover-эффектов */
+      --amber-dim: #7a4f18;  /* Тёмный янтарный — для второстепенных элементов */
+      --red: #8b1a1a;       /* Тёмно-красный — для тикера */
+      --text: #d4c4a0;      /* Основной цвет текста — тёплый белый */
+      --text-dim: #8a7a60;  /* Приглушённый текст — для описаний */
+      --border: #2a2318;    /* Цвет границ и разделителей */
+    }
+
+    /* Сброс стандартных отступов браузера — чтобы всё выглядело одинаково */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Плавная прокрутка при клике на ссылки-якоря */
+    html { scroll-behavior: smooth; }
+
+    /* ── ТЕЛО СТРАНИЦЫ ── */
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Oswald', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      /* Кастомный курсор — SVG-прицел янтарного цвета, встроен прямо в CSS */
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='10' cy='10' r='4' fill='none' stroke='%23c8822a' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='10' r='1' fill='%23c8822a'/%3E%3C/svg%3E") 10 10, crosshair;
+    }
+
+    /* Текстура зернистости поверх всей страницы (эффект старой плёнки)
+       SVG-фильтр шума встроен прямо в код через data:image */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 160px; opacity: .35; mix-blend-mode: overlay;
+    }
+
+    /* Горизонтальные сканлайны поверх страницы — эффект CRT-монитора */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+      background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
+    }
+
+    /* ══════════════════════════════════════
+       НАВИГАЦИЯ — закреплена вверху
+    ══════════════════════════════════════ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.2rem 6vw;
+      background: rgba(10,8,4,.92); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { font-family:'Bebas Neue'; font-size:1.6rem; letter-spacing:.12em; color:var(--amber); text-decoration:none; }
+    .nav-links { display:flex; gap:1.8rem; list-style:none; }
+    .nav-links a { font-family:'Share Tech Mono'; font-size:.7rem; letter-spacing:.18em; text-transform:uppercase; color:var(--text-dim); text-decoration:none; transition:color .2s; }
+    .nav-links a:hover { color:var(--amber); }
+    /* Анимация мигания — для индикатора "СТАНЦИЯ ОНЛАЙН" */
+    .blink { animation:blink 1.2s step-end infinite; }
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    .nav-indicator { font-family:'Share Tech Mono'; font-size:.68rem; color:var(--amber-dim); letter-spacing:.1em; }
+
+    /* ══ БЕГУЩАЯ СТРОКА (ТИКЕР) ══
+       Красная полоса с прокручивающимися предупреждениями */
+    .ticker { background:var(--red); padding:.45rem 0; overflow:hidden; }
+    .ticker-inner { display:flex; white-space:nowrap; animation:ticker 30s linear infinite; }
+    .ticker-inner span { font-family:'Share Tech Mono'; font-size:.68rem; letter-spacing:.2em; color:rgba(255,255,255,.8); padding:0 3rem; }
+    /* Анимация движения тикера слева направо — бесконечная петля */
+    @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* ══════════════════════════════════════
+       HERO-СЕКЦИЯ — первый экран на всю высоту
+    ══════════════════════════════════════ */
+    #hero {
+      position:relative; min-height:100vh;
+      display:flex; flex-direction:column; justify-content:flex-end;
+      padding:80px 6vw 8vh; overflow:hidden;
+    }
+    /* Многослойный градиентный фон героя */
+    .hero-bg {
+      position:absolute; inset:0; z-index:0;
+      background:
+        radial-gradient(ellipse 70% 60% at 60% 40%,rgba(200,130,42,.07) 0%,transparent 70%),
+        radial-gradient(ellipse 40% 50% at 20% 80%,rgba(139,26,26,.12) 0%,transparent 60%),
+        linear-gradient(180deg,#060503 0%,#0f0c08 50%,#08070a 100%);
+    }
+    /* Анимированные концентрические кольца — имитация тоннеля метро */
+    .tunnel{position:absolute;right:-5%;top:50%;transform:translateY(-50%);width:65vw;height:65vw;pointer-events:none;z-index:1}
+    .tunnel-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(200,130,42,.12);animation:pulse-ring 4s ease-in-out infinite}
+    .tunnel-ring:nth-child(2){inset:8%;border-color:rgba(200,130,42,.16);animation-delay:.5s}
+    .tunnel-ring:nth-child(3){inset:16%;border-color:rgba(200,130,42,.22);animation-delay:1s}
+    .tunnel-ring:nth-child(4){inset:24%;border-color:rgba(200,130,42,.3);animation-delay:1.5s}
+    .tunnel-ring:nth-child(5){inset:32%;border-color:rgba(200,130,42,.4);animation-delay:2s}
+    .tunnel-center{position:absolute;inset:40%;border-radius:50%;background:radial-gradient(circle,rgba(200,130,42,.25),rgba(200,130,42,.05));box-shadow:0 0 40px 10px rgba(200,130,42,.15)}
+    /* Пульсация колец тоннеля — создаёт ощущение глубины */
+    @keyframes pulse-ring{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.015)}}
+    .hero-content{position:relative;z-index:2;max-width:700px}
+    /* Маленькая подпись над заголовком */
+    .hero-label{font-family:'Share Tech Mono';font-size:.75rem;letter-spacing:.3em;color:var(--amber);text-transform:uppercase;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .3s forwards}
+    /* Главный заголовок — огромный шрифт Bebas Neue */
+    .hero-title{font-family:'Bebas Neue';font-size:clamp(5rem,14vw,11rem);line-height:.88;letter-spacing:.04em;color:var(--text);text-shadow:0 0 80px rgba(200,130,42,.2);opacity:0;animation:fadeUp .8s .6s forwards}
+    .hero-title span{color:var(--amber);display:block}
+    .hero-sub{margin-top:2rem;font-size:1.1rem;color:var(--text-dim);letter-spacing:.06em;max-width:480px;line-height:1.7;opacity:0;animation:fadeUp .8s .9s forwards}
+    .hero-cta{margin-top:3rem;display:flex;gap:1.5rem;align-items:center;opacity:0;animation:fadeUp .8s 1.2s forwards}
+    /* Кнопка с отрезанными углами (clip-path) — основной стиль */
+    .btn-primary{display:inline-block;padding:.9rem 2.5rem;background:var(--amber);color:#0a0804;font-family:'Oswald';font-weight:600;font-size:.9rem;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));transition:background .2s,transform .2s}
+    .btn-primary:hover{background:var(--amber-light);transform:translateY(-2px)}
+    /* Кнопка-призрак — прозрачная с рамкой */
+    .btn-ghost{display:inline-block;padding:.9rem 2rem;border:1px solid var(--amber-dim);color:var(--amber);font-family:'Oswald';font-weight:400;font-size:.9rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:border-color .2s,color .2s}
+    .btn-ghost:hover{border-color:var(--amber);color:var(--amber-light)}
+    /* Анимация появления снизу вверх — используется для всех элементов hero */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+    /* Базовые отступы для всех секций */
+    section{padding:8rem 6vw}
+    /* Маленькая подпись над заголовком раздела (с горизонтальной линией слева) */
+    .section-label{font-family:'Share Tech Mono';font-size:.8rem;letter-spacing:.35em;color:var(--amber-dim);text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:1rem}
+    .section-label::before{content:'';width:40px;height:1px;background:var(--amber-dim)}
+    /* Крупный заголовок раздела */
+    .section-title{font-family:'Bebas Neue';font-size:clamp(3rem,7vw,5.5rem);letter-spacing:.05em;line-height:.9;margin-bottom:3rem;color:var(--text)}
+
+    /* ══════════════════════════════════════
+       РАЗДЕЛ ИГРЫ — сетка из 3 карточек
+    ══════════════════════════════════════ */
+    #games{background:var(--surface)}
+    .games-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+
+    .game-card{
+      display:block;text-decoration:none;color:inherit;
+      background:var(--card);overflow:hidden;
+      transition:background .3s;position:relative;
+    }
+    .game-card:hover{background:#1e1a12}
+
+    /* Обёртка постера — соотношение сторон 2:3 как у обложки игры */
+    .game-poster-wrap{
+      position:relative;width:100%;
+      aspect-ratio:2.5/3;overflow:hidden;
+    }
+    /* Сама картинка постера — приглушена и насыщается при наведении */
+    .game-poster{
+      width:100%;height:100%;object-fit:cover;object-position:center top;
+      filter:saturate(.55) brightness(.72);
+      transition:filter .5s ease,transform .65s ease;
+      display:block;
+    }
+    .game-card:hover .game-poster{
+      filter:saturate(.95) brightness(.88);
+      transform:scale(1.05);
+    }
+    .game-poster-grad{
+      position:absolute;inset:0;
+      background:linear-gradient(
+        to bottom,
+        transparent 45%,
+        rgba(16,13,8,.75) 70%,
+        rgba(16,13,8,.97) 100%
+      );
+    }
+
+    /* Блок с информацией под обложкой игры */
+    .game-card-info{
+      padding:1.25rem 1.5rem 1.5rem;
+      border-top:1px solid var(--border);
+    }
+    .game-year{font-family:'Share Tech Mono';font-size:.6rem;letter-spacing:.22em;color:var(--amber-dim);margin-bottom:.45rem;text-transform:uppercase}
+    .game-name{font-family:'Bebas Neue';font-size:1.9rem;letter-spacing:.05em;color:var(--text);line-height:.95;margin-bottom:.65rem}
+    .game-desc{font-size:.9rem;color:var(--text-dim);line-height:1.65;margin-bottom:1rem}
+    .game-card-footer{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+    .game-tag{display:inline-block;padding:.22rem .65rem;border:1px solid var(--amber-dim);color:var(--amber);font-family:'Share Tech Mono';font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;transition:border-color .2s,color .2s}
+    .game-card:hover .game-tag{border-color:var(--amber);color:var(--amber-light)}
+    .game-link-btn{margin-left:auto;display:inline-flex;align-items:center;gap:.35rem;padding:.32rem .9rem;background:rgba(200,130,42,.12);border:1px solid rgba(200,130,42,.4);color:var(--amber-light);font-family:'Share Tech Mono';font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;transition:background .2s,border-color .2s;white-space:nowrap}
+    .game-card:hover .game-link-btn{background:rgba(200,130,42,.28);border-color:var(--amber)}
+
+
+    /* ══ АДАПТИВ ══
+       При ширине меньше 900px — переключаем сетки на 2 колонки */
+    @media(max-width:900px){.games-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:500px){.games-grid{grid-template-columns:1fr}}
+
+    /* ══════════════════════════════════════
+       РАЗДЕЛ ЛОР — двухколоночная сетка
+    ══════════════════════════════════════ */
+    .lore-grid{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:start}
+    .lore-text p{margin-bottom:1.5rem;font-size:1rem;line-height:1.85;color:var(--text-dim)}
+    .lore-text p strong{color:var(--amber);font-weight:600}
+    .lore-stats{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+    .stat-block{background:var(--card);padding:2rem;border-left:2px solid var(--amber-dim);transition:border-color .3s,background .3s}
+    .stat-block:hover{border-color:var(--amber);background:#1c180f}
+    .stat-num{font-family:'Bebas Neue';font-size:3rem;color:var(--amber);line-height:1}
+    .stat-label{font-family:'Share Tech Mono';font-size:.65rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;margin-top:.5rem}
+    .lore-divider{width:100%;height:1px;background:linear-gradient(to right,var(--amber-dim),transparent);margin:2.5rem 0}
+
+    /* ══════════════════════════════════════
+       РАЗДЕЛ ФРАКЦИИ — 4 карточки в ряд
+    ══════════════════════════════════════ */
+    #factions{background:var(--surface)}
+    .factions-list{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:1rem}
+    .faction-item{padding:2.5rem 2rem;background:var(--card);position:relative;overflow:hidden;transition:background .3s}
+    /* Цветная линия сверху карточки — появляется при наведении */
+    .faction-item::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;transition:opacity .3s;opacity:0}
+    .faction-item:nth-child(1)::before{background:#c8822a}
+    .faction-item:nth-child(2)::before{background:#8b1a1a}
+    .faction-item:nth-child(3)::before{background:#1a4a8b}
+    .faction-item:nth-child(4)::before{background:#2a7a2a}
+    .faction-item:hover{background:#181510}
+    .faction-item:hover::before{opacity:1}
+    .faction-icon{font-size:2.5rem;margin-bottom:1.5rem;display:block;filter:grayscale(.5);transition:filter .3s}
+    .faction-item:hover .faction-icon{filter:none}
+    .faction-name{font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:.08em;margin-bottom:.75rem}
+    .faction-item:nth-child(1) .faction-name{color:var(--amber)}
+    .faction-item:nth-child(2) .faction-name{color:#c0392b}
+    .faction-item:nth-child(3) .faction-name{color:#5b8dd9}
+    .faction-item:nth-child(4) .faction-name{color:#4aaa4a}
+    .faction-desc{font-size:.85rem;color:var(--text-dim);line-height:1.7}
+
+    /* ══════════════════════════════════════
+       РАЗДЕЛ КАРТА МЕТРО
+    ══════════════════════════════════════ */
+    #map-section{background:#07060400;padding:5rem 3vw 6rem}
+    .metro-map-wrap{width:100%;overflow-x:auto;border:1px solid var(--border);background:#0c0a06;padding:0}
+    .metro-map-wrap svg{min-width:1100px;width:100%;display:block}
+
+    /* ══════════════════════════════════════
+       РАЗДЕЛ ОРУЖИЕ — авто-сетка карточек
+    ══════════════════════════════════════ */
+    #weapons{background:var(--surface)}
+    .weapons-filter{display:flex;gap:.75rem;margin-bottom:3rem;flex-wrap:wrap}
+        /* Кнопки фильтра (Все / Пистолеты / Автоматы и т.д.) */
+    .filter-btn{padding:.45rem 1.2rem;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:'Share Tech Mono';font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+        /* Активная/наведённая кнопка фильтра */
+    .filter-btn.active,.filter-btn:hover{border-color:var(--amber);color:var(--amber);background:rgba(200,130,42,.1)}
+    .weapons-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:2px}
+        /* Карточка оружия */
+    .weapon-card{background:var(--card);padding:2rem;display:flex;flex-direction:column;gap:1rem;transition:background .3s;border-left:2px solid transparent}
+    .weapon-card:hover{background:#1c180f;border-left-color:var(--amber-dim)}
+    .weapon-img-wrap{width:100%;height:140px;display:contents;align-items:center;justify-content:center;background:#0e0c09;overflow:hidden;position:relative}
+    .weapon-img-wrap img{max-width:100%;max-height:140px;object-fit:contain;filter:saturate(1.5) brightness(1);transition:filter .3s}
+    .weapon-card:hover .weapon-img-wrap img{transform:scale(1.15)}
+    .weapon-img-fb{width:100%;height:100%;display:none;align-items:center;justify-content:center}
+    .weapon-name{font-family:'Bebas Neue';font-size:1.5rem;letter-spacing:.06em;color:var(--text)}
+    .weapon-game{font-family:'Share Tech Mono';font-size:.6rem;letter-spacing:.2em;color:var(--amber-dim);text-transform:uppercase}
+    .weapon-badge{display:inline-block;padding:.2rem .65rem;font-family:'Share Tech Mono';font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;border:1px solid var(--border);color:var(--text-dim);width:fit-content}
+    .weapon-stats{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+    .wstat{font-family:'Share Tech Mono';font-size:.65rem;color:var(--text-dim)}
+    .wstat span{color:var(--amber)}
+        /* Полоска прогресса характеристики */
+    .wstat-bar{height:3px;background:var(--border);margin-top:.2rem}
+    .wstat-fill{height:100%;background:var(--amber);transition:width .8s ease;width:0}
+    .weapon-desc{font-size:.8rem;color:var(--text-dim);line-height:1.6}
+
+    /* ══════════════════════════════════════
+       РАЗДЕЛ СЧЁТЧИК — янтарная плашка
+       clip-path делает срезанные углы
+    ══════════════════════════════════════ */
+    #counter{background:var(--amber);padding:4rem 6vw;text-align:center;clip-path:polygon(0 20px,20px 0,calc(100% - 20px) 0,100% 20px,100% calc(100% - 20px),calc(100% - 20px) 100%,20px 100%,0 calc(100% - 20px))}
+    #counter .section-title{color:#0a0804;font-size:clamp(2rem,5vw,3.5rem);margin-bottom:1rem}
+    #counter p{color:rgba(10,8,4,.65);font-size:1rem;letter-spacing:.05em;margin-bottom:2.5rem}
+    .counter-grid{display:flex;justify-content:center;gap:4rem;flex-wrap:wrap}
+    .counter-item .num{font-family:'Bebas Neue';font-size:4rem;color:#0a0804;display:block}
+    .counter-item .lbl{font-family:'Share Tech Mono';font-size:.7rem;letter-spacing:.2em;color:rgba(10,8,4,.6);text-transform:uppercase}
+
+    /* ══════════════════════════════════════
+       РАЗДЕЛ ЦИТАТЫ — слайдер карточек
+    ══════════════════════════════════════ */
+    #quotes{background:var(--surface)}
+    .quote-slider{overflow:hidden}
+    .quote-track{display:flex;gap:2rem;transition:transform .6s cubic-bezier(.25,.46,.45,.94)}
+    .quote-card{flex:0 0 calc(50% - 1rem);background:var(--card);padding:3rem;border-left:3px solid var(--amber-dim);position:relative}
+        /* Декоративная большая кавычка в углу карточки цитаты */
+    .quote-card::before{content:'"';position:absolute;top:-.5rem;left:2rem;font-family:'Bebas Neue';font-size:6rem;color:var(--amber-dim);line-height:1;pointer-events:none}
+    .quote-text{font-size:1rem;line-height:1.8;color:var(--text);font-style:italic;margin-bottom:1.5rem}
+    .quote-author{font-family:'Share Tech Mono';font-size:.7rem;letter-spacing:.2em;color:var(--amber);text-transform:uppercase}
+    .quote-nav{display:flex;gap:1rem;margin-top:2rem}
+    .quote-btn{width:48px;height:48px;background:transparent;border:1px solid var(--amber-dim);color:var(--amber);font-size:1.2rem;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center}
+    .quote-btn:hover{background:var(--amber-dim)}
+
+    /* ══════════════════════════════════════
+       ПОДВАЛ (ФУТЕР)
+    ══════════════════════════════════════ */
+    footer{background:#060503;padding:4rem 6vw 2rem;border-top:1px solid var(--border)}
+    .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4rem;margin-bottom:3rem}
+    .footer-logo{font-family:'Bebas Neue';font-size:2.5rem;color:var(--amber);letter-spacing:.1em;margin-bottom:1rem}
+    .footer-about{font-size:.85rem;color:var(--text-dim);line-height:1.8}
+    .footer-heading{font-family:'Share Tech Mono';font-size:.7rem;letter-spacing:.25em;color:var(--amber-dim);text-transform:uppercase;margin-bottom:1.5rem}
+    .footer-links{list-style:none}
+    .footer-links li{margin-bottom:.75rem}
+    .footer-links a{color:var(--text-dim);text-decoration:none;font-size:.9rem;transition:color .2s}
+    .footer-links a:hover{color:var(--amber)}
+    .footer-bottom{border-top:1px solid var(--border);padding-top:2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+    .footer-copy{font-family:'Share Tech Mono';font-size:.65rem;letter-spacing:.15em;color:var(--text-dim)}
+
+    /* Класс для анимации появления элементов при прокрутке.
+       Изначально скрыт, класс .visible добавляется через JavaScript */
+    .reveal{opacity:0;transform:translateY(40px);transition:opacity .7s ease,transform .7s ease}
+        /* Видимое состояние — элемент появился */
+    .reveal.visible{opacity:1;transform:none}
+    @media(max-width:900px){.games-grid{grid-template-columns:1fr 1fr}.lore-grid{grid-template-columns:1fr;gap:3rem}.factions-list{grid-template-columns:1fr 1fr}.footer-grid{grid-template-columns:1fr 1fr}.nav-links{display:none}}
+    /* При ширине меньше 600px — всё в одну колонку */
+    @media(max-width:600px){.games-grid{grid-template-columns:1fr}.factions-list{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr}.quote-card{flex:0 0 100%}}
+
+    /* ══════════════════════════════════════
+       РАЗДЕЛ МОНСТРЫ — бестиарий
+    ══════════════════════════════════════ */
+    #monstrs{background:var(--bg)}
+    .monsters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:2px}
+    .monster-card{background:var(--card);overflow:hidden;border-left:3px solid transparent;transition:background .3s,border-color .3s;display:flex;flex-direction:column}
+    .monster-card:hover{background:#1c180f}
+    .monster-img{width:100%;height:350px;position:relative;overflow:hidden;background:#080604}
+    .monster-img img{width:100%;height:100%;object-fit:cover;object-position:center top;filter:saturate(.65) brightness(.75);transition:filter .5s,transform .6s ease;display:block}
+    .monster-card:hover .monster-img img{filter:saturate(.95) brightness(.9);transform:scale(1.05)}
+    .monster-img-fb{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+        /* Градиент снизу картинки монстра — плавный переход в фон */
+    .monster-img-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(16,13,8,.9) 0%,transparent 55%);pointer-events:none}
+    .monster-body{padding:1.5rem 1.75rem 1.75rem;flex:1;display:flex;flex-direction:column}
+    .monster-gtag{display:inline-block;padding:.2rem .7rem;font-family:'Share Tech Mono';font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;border:1px solid;margin-bottom:.75rem}
+    .monster-name{font-family:'Bebas Neue';font-size:2rem;letter-spacing:.05em;line-height:1;margin-bottom:.2rem}
+    .monster-latin{font-family:'Share Tech Mono';font-size:.58rem;letter-spacing:.12em;color:var(--text-dim);opacity:.6;margin-bottom:.85rem;font-style:italic}
+    .monster-desc{font-size:.9rem;color:var(--text-dim);line-height:1.72;margin-bottom:1.1rem}
+    .monster-stats{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.85rem;margin-top:auto}
+    .mstat{font-family:'Share Tech Mono';font-size:.6rem;color:var(--text-dim);letter-spacing:.08em}
+    .mstat span{color:var(--amber)}
+    .mstat-bar{height:3px;background:var(--border);margin-top:.22rem;border-radius:1px}
+    .mstat-fill{height:100%;border-radius:1px;transition:width .9s ease;width:0}
+    .monster-loc{padding:.38rem .3rem;background:rgba(200,130,42,.05);border-left:2px solid var(--amber-dim);font-family:'Share Tech Mono';font-size:.7rem;color:var(--text-dim);letter-spacing:.07em}
+    .monster-loc b{color:var(--amber);font-weight:400}
+    @media(max-width:600px){.monsters-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<!-- ════ НАВИГАЦИЯ ════ -->
+<nav>
+  <a href="index.html" class="nav-logo">МЕТРО</a>
+  <ul class="nav-links">
+    <li><a href="#games">Игры</a></li>
+    <li><a href="#lore">Лор</a></li>
+    <li><a href="#factions">Фракции</a></li>
+    <li><a href="#map-section">Карта</a></li>
+    <li><a href="#weapons">Оружие</a></li>
+    <il><a href="#monstrs">Монстры</a></il>
+  </ul>
+  <div class="nav-indicator"><span class="blink">▮</span> СТАНЦИЯ ОНЛАЙН</div>
+</nav>
+
+<!-- ════ БЕГУЩАЯ СТРОКА ════
+     Дублируем сообщения дважды чтобы бег был бесконечным -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span>⚠ УРОВЕНЬ РАДИАЦИИ: ВЫСОКИЙ</span><span>◈ ЗАПАС ПАТРОН: КРИТИЧЕСКИЙ</span>
+    <span>☢ ВНИМАНИЕ: АНОМАЛИЯ НА ПОВЕРХНОСТИ</span><span>◈ СВЯЗЬ С ОРДЕНОМ УСТАНОВЛЕНА</span>
+    <span>⚠ МУТАНТЫ ЗАМЕЧЕНЫ У ТОННЕЛЯ 12</span><span>◈ ФИЛЬТР ПРОТИВОГАЗА: ЗАМЕНИТЬ</span>
+    <span>⚠ УРОВЕНЬ РАДИАЦИИ: ВЫСОКИЙ</span><span>◈ ЗАПАС ПАТРОН: КРИТИЧЕСКИЙ</span>
+    <span>☢ ВНИМАНИЕ: АНОМАЛИЯ НА ПОВЕРХНОСТИ</span><span>◈ СВЯЗЬ С ОРДЕНОМ УСТАНОВЛЕНА</span>
+    <span>⚠ МУТАНТЫ ЗАМЕЧЕНЫ У ТОННЕЛЯ 12</span><span>◈ ФИЛЬТР ПРОТИВОГАЗА: ЗАМЕНИТЬ</span>
+  </div>
+</div>
+
+<!-- ════ HERO — ПЕРВЫЙ ЭКРАН ════
+     hero-bg: фон-градиент
+     tunnel: анимированные кольца тоннеля
+     hero-content: текст и кнопки -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="tunnel">
+    <div class="tunnel-ring"></div><div class="tunnel-ring"></div><div class="tunnel-ring"></div><div class="tunnel-ring"></div><div class="tunnel-ring"></div>
+    <div class="tunnel-center"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-label">▸ Серия / Постапокалипсис</div>
+    <h1 class="hero-title">Метро<span>2033</span></h1>
+    <p class="hero-sub">Добро пожаловать в московское метро — последнее прибежище человечества после ядерной катастрофы. Выжить. Любой ценой.</p>
+    <div class="hero-cta">
+      <a href="#games" class="btn-primary">Исследовать</a>
+      <a href="#lore" class="btn-ghost">История мира</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════ ИГРЫ ════
+     Три карточки с обложками игр серии Metro -->
+<section id="games">
+  <div class="section-label">Игровая серия</div>
+  <h2 class="section-title reveal">Три Главы<br>Одной Легенды</h2>
+  <div class="games-grid">
+
+    <a href="metro2033.html" class="game-card reveal">
+      <div class="game-poster-wrap">
+        <img class="game-poster"
+          src="img\58f13773bf58c99f3afbf3ad653556e4.jpg"
+          alt="Metro 2033"
+          onerror="this.style.opacity='0'">
+        <div class="game-poster-grad"></div>
+      </div>
+      <div class="game-card-info">
+        <div class="game-year">2010 — THQ / 4A Games</div>
+        <div class="game-name">Metro 2033</div>
+        <div class="game-desc">Первое появление Артёма. Станция ВДНХ под угрозой — Тёмные идут из глубин тоннелей.</div>
+        <div class="game-card-footer">
+          <span class="game-tag">Оригинал</span>
+          <span class="game-link-btn">Открыть →</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="lastlight.html" class="game-card reveal" style="transition-delay:.15s">
+      <div class="game-poster-wrap">
+        <img class="game-poster"
+          src="img\metrolastrightredux.jpg"
+          alt="Metro Last Light"
+          onerror="this.style.opacity='0'">
+        <div class="game-poster-grad"></div>
+      </div>
+      <div class="game-card-info">
+        <div class="game-year">2013 — Deep Silver / 4A Games</div>
+        <div class="game-name">Metro: Last Light</div>
+        <div class="game-desc">Год спустя. Артём ищет последнего выжившего Тёмного среди политических интриг.</div>
+        <div class="game-card-footer">
+          <span class="game-tag">Сиквел</span>
+          <span class="game-link-btn">Открыть →</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="exodus.html" class="game-card reveal" style="transition-delay:.3s">
+      <div class="game-poster-wrap">
+        <img class="game-poster"
+          src="img\metro-exodus-708289.10.jpg"
+          alt="Metro Exodus"
+          onerror="this.style.opacity='0'">
+        <div class="game-poster-grad"></div>
+      </div>
+      <div class="game-card-info">
+        <div class="game-year">2019 — Deep Silver / 4A Games</div>
+        <div class="game-name">Metro: Exodus</div>
+        <div class="game-desc">Прорыв на поверхность. Паровоз «Аврора» везёт команду через всю Россию.</div>
+        <div class="game-card-footer">
+          <span class="game-tag">Открытый мир</span>
+          <span class="game-link-btn">Открыть →</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+
+<!-- ════ ЛОР ════
+     Слева: текст об истории мира
+     Справа: блоки со статистикой -->
+<section id="lore">
+  <div class="section-label">Вселенная</div>
+  <div class="lore-grid">
+    <div class="lore-text reveal">
+      <h2 class="section-title">История<br>После Конца</h2>
+      <p>В <strong>2013 году</strong> ядерная война уничтожила цивилизацию. Выжившие москвичи укрылись в метро — самом глубоком бомбоубежище в мире.</p>
+      <div class="lore-divider"></div>
+      <p>Двадцать лет спустя метро превратилось в <strong>целое государство</strong>: со своими фракциями, экономикой и войнами. Патроны калибра 5.45 стали валютой. Мутанты заняли тоннели.</p>
+      <div class="lore-divider"></div>
+      <p>Серия основана на романах <strong>Дмитрия Глуховского</strong> — первый роман публиковался в интернете бесплатно и стал культовым ещё до официального издания.</p>
+    </div>
+    <div class="lore-stats reveal" style="transition-delay:.2s">
+      <div class="stat-block"><div class="stat-num">40+</div><div class="stat-label">Станций в метро</div></div>
+      <div class="stat-block"><div class="stat-num">2013</div><div class="stat-label">Год катастрофы</div></div>
+      <div class="stat-block"><div class="stat-num">24</div><div class="stat-label">Фракции</div></div>
+      <div class="stat-block"><div class="stat-num">20</div><div class="stat-label">Лет спустя </div></div>
+      <div class="stat-block" style="grid-column:1/-1"><div class="stat-num" id="copiesCounter">50к</div><div class="stat-label">Выживших в метро</div></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════ ФРАКЦИИ ════
+     Орден, Красная Линия, Рейх, Ганза -->
+<section id="factions">
+  <div class="section-label">Политика Подземелья</div>
+  <h2 class="section-title reveal">Фракции Метро</h2>
+  <div class="factions-list">
+    <div class="faction-item reveal">
+      <span class="faction-icon"><img src="img\Faction_Logo_Order.webp"style="max-width:20%;height:auto;"/></span>
+      <div class="faction-name">Спарта (Орден)</div>
+      <p class="faction-desc">Элитные рейнджеры метро. Нейтральны, профессиональны, смертоносны. Единственная сила, способная защитить всё метро от внешних угроз.</p>
+    </div>
+    <div class="faction-item reveal" style="transition-delay:.1s">
+      <span class="faction-icon"><img src="img\Faction_Logo_Red_Line.webp"style="max-width:20%;height:auto;"/></span>
+      <div class="faction-name">Красная линия</div>
+      <p class="faction-desc">Коммунисты подземелья. Агрессивная пропаганда, тотальный контроль, расстрелы инакомыслящих. Мечтают объединить метро под красным флагом.</p>
+    </div>
+    <div class="faction-item reveal" style="transition-delay:.2s">
+      <span class="faction-icon"><img src="img\Reich.webp"style="max-width:20%;height:auto;"/></span>
+      <div class="faction-name">Рейх</div>
+      <p class="faction-desc">Фашистская хунта. Чистота породы, военная дисциплина, огнемёты. Контролируют стратегические станции на западных ветках.</p>
+    </div>
+    <div class="faction-item reveal" style="transition-delay:.3s">
+      <span class="faction-icon"><img src="img\Faction_Logo_Hanza.webp"style="max-width:20%;height:auto;"/></span>
+      <div class="faction-name">Ганза</div>
+      <p class="faction-desc">Торговый союз центральных станций. Прагматики и купцы подземелья. Контролируют Кольцевую линию — главную торговую артерию метро.</p>
+    </div>
+  </div>
+</section>
+
+<!-- КАРТА МЕТРО -->
+<section id="map-section" style="background:#07060400;padding:5rem 3vw 6rem">
+  <div style="padding:0 2vw 2rem">
+    <div class="section-label">Схема подземелья</div>
+    <h2 class="section-title reveal">Карта Метро 2033</h2>
+    <p style="color:var(--text-dim);font-size:1.2rem;letter-spacing:.04em;margin-bottom:2rem">Схема-путеводитель московского метрополитена по вселенной Дмитрия Глуховского. Фракционный контроль, опасные зоны, ключевые станции.</p>
+  </div>
+  <div class="metro-map-wrap reveal" style="border:1px solid #2a2318;background:#0c0a06;overflow-x:auto;padding:1.5rem;text-align:center">
+    <img src="img\i_001.jpg" alt="Схема-путеводитель московского метрополитена — Metro 2033"
+      style="max-width:100%;height:auto;display:inline-block;filter:sepia(0.15) brightness(0.95) contrast(1.05);"
+    />
+  </div>
+</section>
+
+
+<!-- ════ ОРУЖИЕ ════
+     Карточки генерируются через JavaScript (массив WEAPONS)
+     Фильтры по типу: Пистолеты / Автоматы / Дробовики / Пневматика / Тяжёлое -->
+<section id="weapons">
+  <div class="section-label">Арсенал Подземелья</div>
+  <h2 class="section-title reveal">Оружие Метро</h2>
+  <p style="color:var(--text-dim);font-size:1.2rem;letter-spacing:.04em;margin-bottom:2rem">Каждое оружие поддерживает глубокую систему модификаций. Одна и та же база может стать SMG, снайперкой или оружием для стелса.</p>
+  <div class="weapons-filter">
+    <button class="filter-btn active" data-filter="all">Все</button>
+    <button class="filter-btn" data-filter="pistol">Пистолеты</button>
+    <button class="filter-btn" data-filter="rifle">Автоматы/Карабины</button>
+    <button class="filter-btn" data-filter="shotgun">Дробовики</button>
+    <button class="filter-btn" data-filter="special">Пневматика</button>
+    <button class="filter-btn" data-filter="heavy">Тяжёлое</button>
+  </div>
+  <div class="weapons-grid" id="weaponsGrid"></div>
+</section>
+
+<!-- МОНСТРЫ -->
+
+<!-- ════ МОНСТРЫ ════
+     Карточки генерируются через JavaScript (массив MONSTERS)
+     Фильтры: Все / Metro 2033 / Last Light / Exodus -->
+<section id="monstrs">
+  <div class="section-label">Бестиарий</div>
+  <h2 class="section-title reveal">Монстры Метро</h2>
+  <p style="color:var(--text-dim);font-size:1.2rem;letter-spacing:.04em;margin-bottom:2rem">Мутировавшая фауна постъядерной России. Каждое существо — продукт радиации, темноты и двадцати лет эволюции.</p>
+  <div class="weapons-filter" id="monsterFilter">
+    <button class="filter-btn active" data-mf="all">Все</button>
+    <button class="filter-btn" data-mf="2033">Metro 2033</button>
+    <button class="filter-btn" data-mf="ll">Last Light</button>
+    <button class="filter-btn" data-mf="ex">Exodus</button>
+  </div>
+  <div class="monsters-grid" id="monstersGrid"></div>
+</section>
+
+<!-- ПРИКОЛЬНЫЙ СЧЁТЧИК -->
+<div id="counter">
+  <h2 class="section-title">Присоединись к Выжившим</h2>
+  <p>Миллионы игроков уже спустились в метро</p>
+  <div class="counter-grid">
+    <div class="counter-item"><span class="num" data-target="30">0</span><span class="lbl">млн проданных копий</span></div>
+    <div class="counter-item"><span class="num" data-target="3">0</span><span class="lbl">основных игры</span></div>
+    <div class="counter-item"><span class="num" data-target="2">0</span><span class="lbl">Redux-издания</span></div>
+    <div class="counter-item"><span class="num" data-target="15">0</span><span class="lbl">лет вселенной</span></div>
+  </div>
+</div>
+
+
+<!-- ════ ЦИТАТЫ ════
+     Слайдер — листается кнопками ‹ и ›
+     Ширина карточки = 50% минус половина отступа -->
+<section id="quotes">
+  <div class="section-label">Слова из Тьмы</div>
+  <h2 class="section-title reveal">Голоса Метро</h2>
+  <div class="quote-slider reveal">
+    <div class="quote-track" id="quoteTrack">
+      <div class="quote-card"><p class="quote-text">Мне кажется, самое страшное в нашем мире — это не мутанты, не радиация и даже не войны. Самое страшное — это то, что мы начинаем привыкать ко всему этому.</p><div class="quote-author">— Артём, Metro 2033</div></div>
+      <div class="quote-card"><p class="quote-text">Раньше я думал, что у нас нет будущего. Теперь я знаю: у нас есть прошлое, а значит — будет и будущее. Главное — помнить, чего мы стоим.</p><div class="quote-author">— Полковник Миллер, Metro: Exodus</div></div>
+      <div class="quote-card"><p class="quote-text">Метро — это не просто тоннели и станции. Это последнее место, где люди ещё помнят, что значит быть людьми. Хотя не всегда это получается.</p><div class="quote-author">— Хан, Metro 2033</div></div>
+      <div class="quote-card"><p class="quote-text">Они не враги. Они — зеркало. Смотришь на них и видишь: вот что стало бы с нами, если бы природа взяла своё чуть раньше.</p><div class="quote-author">— Артём о Тёмных, Last Light</div></div>
+    </div>
+  </div>
+  <div class="quote-nav">
+    <button class="quote-btn" id="quotePrev">‹</button>
+    <button class="quote-btn" id="quoteNext">›</button>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo">МЕТРО</div>
+      <h3 class="footer-about">Фан-сайт, посвящённый игровой серии Metro от студии 4A Games. Все права принадлежат их владельцам. Неофициальный ресурс.</h3>
+    </div>
+    <div>
+      <div class="footer-heading">Игры</div>
+      <ul class="footer-links">
+        <li><a href="metro2033.html">Metro 2033</a></li>
+        <li><a href="lastlight.html">Metro: Last Light</a></li>
+        <li><a href="exodus.html">Metro: Exodus</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-heading">Разделы</div>
+      <ul class="footer-links">
+        <li><a href="#map-section">Карта метро</a></li>
+        <li><a href="#weapons">Оружие</a></li>
+        <li><a href="#factions">Фракции</a></li>
+        <il><a href="#monstrs">Монстрый</a></il>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 МЕТРО — ФАНАТСКИЙ САЙТ · НЕ ОФИЦИАЛЬНЫЙ РЕСУРС</span>
+    <span class="footer-copy">☢ РАДИАЦИЯ БЕЗОПАСНА НА ЭТОЙ СТОРОНЕ ЭКРАНА</span>
+  </div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════
+// Оружия из серий Metro: Exodus
+// ══════════════════════════════════════════════
+const WEAPONS = [
+  // ─── ПИСТОЛЕТЫ ───
+  {
+    name: "Ревolver",
+    runame: "Револьвер",
+    type: "pistol",
+    img: "img/1550416523_revolver.webp",
+    damage: 40, accuracy: 75, rate: 35,
+    ammo: "Пистолетные патроны",
+    mods: "Ствол · Приклад · Прицел · Магазин · Гаджеты",
+    desc: "Надёжный и мощный пистолет — основа арсенала Артёма. Отдача высокая, но с длинным стволом и 4x прицелом превращается в мощную снайперскую пушку. С глушителем — идеальное оружие для стелса."
+  },
+  {
+    name: "Stallion",
+    runame: "Жеребец (Стэллион)",
+    type: "pistol",
+    img: "img/alex-smirnov-cayde-1.jpg",
+    damage: 25, accuracy: 65, rate: 80,
+    ammo: "Пистолетные патроны",
+    mods: "Ствол · Приклад · Прицел · Магазин · Гаджеты",
+    desc: "Пистолет-пулемёт с огромной скорострельностью. Сам по себе неточен, но со стабилизирующим прикладом превращается в компактный SMG. Бастард + Жеребец = идеальная связка ближнего боя."
+  },
+
+  // ─── ПИСТОЛЕТЫ-ПУЛЕМЁТЫ / ШТУРМОВЫЕ ───
+  {
+    name: "Bastard",
+    runame: "Бастард (Ублюдок)",
+    type: "rifle",
+    img: "img/1550416727_bastard-gun-1.webp",
+    damage: 15, accuracy: 65, rate: 100,
+    ammo: "Пистолетные патроны",
+    mods: "Ствол · Приклад · Прицел · Магазин · Гаджеты",
+    desc: "Кастомный SMG — мусорная сборка из деталей разных образцов, но работает. Высокая скорострельность, склонен к перегреву при долгой стрельбе. С правильным обвесом становится убийственно эффективен в тоннелях."
+  },
+
+  // ─── АВТОМАТЫ / КАРАБИНЫ ───
+  {
+    name: "Kalash",
+    runame: "Калаш",
+    type: "rifle",
+    img: "img/1550416848_kalash-gun-1.webp",
+    damage: 58, accuracy: 70, rate: 78,
+    ammo: "Автоматные патроны 5.45",
+    mods: "Ствол · Приклад · Прицел · Магазин · Гаджеты",
+    desc: "Классика постапокалипсиса — АК-74М в базовой конфигурации. Универсален на любой дистанции. С барабанным магазином на 75 патронов превращается в ручной пулемёт. Пожалуй, лучший выбор «на все случаи»."
+  },
+  {
+    name: "Bulldog",
+    runame: "Бульдог",
+    type: "rifle",
+    img: "img/1550416949_bulldog.webp",
+    damage: 76, accuracy: 80, rate: 55,
+    ammo: "Снайперские патроны",
+    mods: "Ствол · Приклад · Прицел · Магазин · Гаджеты",
+    desc: "Полуавтоматическая штурмовая винтовка — улучшенный Калаш. Больше урона, лучше точность на средних и дальних дистанциях. Медленнее, зато бьёт сильнее. Лучший выбор против бронированных врагов."
+  },
+  {
+    name: "Sammy",
+    runame: "Сэмми",
+    type: "rifle",
+    img: "img/alex-smirnov-cayde-1 (3).jpg",
+    damage: 46, accuracy: 55, rate: 88,
+    ammo: "Пистолетные патроны",
+    mods: "Ствол · Приклад · Прицел · Магазин · Гаджеты",
+    desc: "ППШ-41 — иконический советский пистолет-пулемёт времён Второй мировой. В постъядерной России снова в ходу. Барабанный магазин на 71 патрон. Скорострельный, грозный на ближней дистанции, узнаваем мгновенно."
+  },
+
+  // ─── ДРОБОВИКИ ───
+  {
+    name: "Shambler",
+    runame: "Убоиник (Шамблер)",
+    type: "shotgun",
+    img: "img/1550416608_shambler-shot-gun-1.webp",
+    damage: 65, accuracy: 10, rate: 60,
+    ammo: "Дробь",
+    mods: "Ствол · Приклад · Прицел · Магазин",
+    desc: "Помповый дробовик с барабанным магазином. Медленно перезаряжается, но останавливающее действие огромное. С глушителем — тихий убийца в помещениях. Незаменим против мутантов вплотную."
+  },
+  {
+    name: "Ashot",
+    runame: "Ашот",
+    type: "shotgun",
+    img: "img/1550416638_ashot.webp",
+    damage: 98, accuracy: 22, rate: 28,
+    ammo: "Дробь",
+    mods: "1/2/4 ствола · Прицел · Рукоять",
+    desc: "Двуствольный обрез — самое разрушительное оружие на дистанции вытянутой руки. Дикая точность ноль, зато в упор разносит всё. С двумя стволами — мечта для ближнего боя."
+  },
+
+  // ─── ПНЕВМАТИКА / САМОДЕЛЬНОЕ ───
+  {
+    name: "Tikhar",
+    runame: "Тихарь",
+    type: "special",
+    img: "img/1550417031_tikhar.webp",
+    damage: 15, accuracy: 80, rate: 75,
+    ammo: "Стальные шары (крафт)",
+    mods: "Ствол · Прицел · Резервуар давления · Тип снаряда (в т.ч. Рельсотрон)",
+    desc: "Легендарная пневматическая винтовка — абсолютно бесшумная. Стреляет стальными шарами, которые можно крафтить из металлолома. В конфигурации Рельсотрон — самое мощное оружие в игре: 15 урона за выстрел."
+  },
+  {
+    name: "Helsing",
+    runame: "Хельсинг",
+    type: "special",
+    img: "img/1550417096_helsing-hunting-crossbow001.webp",
+    damage: 82, accuracy: 78, rate: 15,
+    ammo: "Болты (крафт / подбор)",
+    mods: "Ствол · Прицел · Тип болтов (обычные / взрывные / электрические)",
+    desc: "Пневматический арбалет — самое тихое оружие в игре. Болты можно подбирать и переиспользовать. С электрическими болтами оглушает врагов. Король стелса на любой дистанции — если попасть."
+  },
+
+  // ─── КЛАПАННАЯ СНАЙПЕРКА ───
+  {
+    name: "Valve",
+    runame: "Вентиль",
+    type: "rifle",
+    img: "img/1550416972_valve.webp",
+    damage: 93, accuracy: 96, rate: 18,
+    ammo: "Снайперские патроны",
+    mods: "Ствол · Приклад · Прицел (до 4x и NV) · Магазин",
+    desc: "Снайперская винтовка с болтовым затвором — самое точное оружие в арсенале Exodus. Один выстрел — один противник. С ночным прицелом и глушителем превращается в идеальное оружие для стелс-снайпера."
+  },
+
+  // ─── ТЯЖЁЛОЕ ───
+  {
+    name: "Gatling",
+    runame: "Гатлинг",
+    type: "heavy",
+    img: "img/oleksandr-kryvolapov-gatling-grades.jpg",
+    damage: 65, accuracy: 42, rate: 100,
+    ammo: "Автоматные патроны 5.45",
+    mods: "Нет (не модифицируется)",
+    desc: "Многоствольный пулемёт Гатлинга — подбирается только у бронированных тяжёлых врагов. Не поддаётся модификации, жрёт патроны тысячами, но просто косит всё живое. Тактическое ядерное оружие ближнего боя."
+  },
+  {
+    name: "Flamethrower",
+    runame: "Огнемёт",
+    type: "heavy",
+    img: "img/mykola-grinder-myhalenko-3.jpg",
+    damage: 100, accuracy: 18, rate: 100,
+    ammo: "Топливо (ограничено)",
+    mods: "Нет",
+    desc: "Портативный огнемёт из DLC «Два Полковника». Пилотное пламя используется как фонарик. Основная атака — непрерывная струя огня. Уничтожает паутину, мутантов и всё живое. Абсолютный хаос в ближнем бою."
+  },
+];
+
+
+// Словарь: тип оружия → русское название для бейджа на карточке
+const BADGE = {pistol:"Пистолет",rifle:"Автомат/Карабин",shotgun:"Дробовик",special:"Пневматика",heavy:"Тяжёлое вооружение"};
+
+// Ссылка на контейнер сетки оружий
+const grid = document.getElementById('weaponsGrid');
+let barObserver; // Наблюдатель за полосками прогресса
+
+
+// ─── ФУНКЦИЯ ОТРИСОВКИ КАРТОЧЕК ОРУЖИЯ ───
+// filter — строка типа ("all", "pistol", "rifle" и т.д.)
+function renderWeapons(filter){
+  grid.innerHTML=''; // Очищаем сетку перед перерисовкой
+  if(barObserver) barObserver.disconnect();
+  const list = filter==='all' ? WEAPONS : WEAPONS.filter(w=>w.type===filter);
+  list.forEach((w,i)=>{
+    const d=document.createElement('div');
+    d.className='weapon-card reveal';
+    d.style.transitionDelay=(i%4*.08)+'s';
+    d.innerHTML=`
+      <div class="weapon-img-wrap">
+        <img src="${w.img}" alt="${w.runame||w.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="weapon-img-fb"><svg viewBox="0 0 180 60" width="160" opacity=".18"><rect x="5" y="18" width="120" height="18" rx="4" fill="#c8822a"/><rect x="125" y="14" width="50" height="8" rx="2" fill="#c8822a"/><rect x="30" y="36" width="60" height="12" rx="3" fill="#c8822a"/><rect x="55" y="10" width="8" height="8" rx="1" fill="#c8822a"/></svg></div>
+      </div>
+      <div>
+        <div class="weapon-name">${w.runame||w.name}</div>
+        <div style="font-family:'Share Tech Mono';font-size:.58rem;letter-spacing:.15em;color:#4a3a28;text-transform:uppercase;margin-top:.15rem">${w.name}</div>
+      </div>
+      <div class="weapon-badge">${BADGE[w.type]}</div>
+      <div class="weapon-stats">
+        <div class="wstat">УРОН <span>${w.damage}</span><div class="wstat-bar"><div class="wstat-fill" data-w="${w.damage}"></div></div></div>
+        <div class="wstat">ТОЧНОСТЬ <span>${w.accuracy}</span><div class="wstat-bar"><div class="wstat-fill" data-w="${w.accuracy}"></div></div></div>
+        <div class="wstat" style="grid-column:1/-1">СКОРОСТЬ <span>${w.rate}</span><div class="wstat-bar"><div class="wstat-fill" data-w="${w.rate}"></div></div></div>
+      </div>
+      ${w.ammo ? `<div style="font-family:'Share Tech Mono';font-size:.62rem;color:#7a4f18;letter-spacing:.1em"><span style="color:#8a7a60">ПАТРОНЫ: </span>${w.ammo}</div>` : ''}
+      ${w.mods ? `<div style="font-family:'Share Tech Mono';font-size:.6rem;color:#6a5a40;letter-spacing:.08em;line-height:1.5"><span style="color:#7a6a50">МОДЫ: </span>${w.mods}</div>` : ''}
+      <div class="weapon-desc">${w.desc}</div>`;
+    grid.appendChild(d);
+    mainObserver.observe(d);
+  });
+  barObserver = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting) e.target.querySelectorAll('.wstat-fill').forEach(b=>b.style.width=b.dataset.w+'%');
+    });
+  },{threshold:.2});
+  grid.querySelectorAll('.weapon-card').forEach(c=>barObserver.observe(c));
+}
+
+
+// ─── ГЛАВНЫЙ НАБЛЮДАТЕЛЬ ПОЯВЛЕНИЯ ЭЛЕМЕНТОВ ───
+// Следит за всеми элементами с классом .reveal
+// Когда элемент попадает в область видимости — добавляет класс .visible
+const mainObserver = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');mainObserver.unobserve(e.target);}});
+},{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>mainObserver.observe(el));
+
+
+// Первоначальная отрисовка — показываем все оружия
+renderWeapons('all');
+
+// Вешаем обработчики на кнопки фильтра
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderWeapons(btn.dataset.filter);
+  });
+});
+
+
+// ─── АНИМИРОВАННЫЙ СЧЁТЧИК ───
+// Плавно считает от 0 до нужного числа за 1.8 секунды
+function animCount(el,target,dur=1800){
+  let s=0; const step=target/(dur/16);
+  const t=setInterval(()=>{s+=step;if(s>=target){s=target;clearInterval(t);}el.textContent=Math.floor(s);},16);
+}
+
+// Запускаем счётчик только один раз когда блок появился на экране
+let counted=false;
+new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting&&!counted){counted=true;
+    document.querySelectorAll('[data-target]').forEach(el=>animCount(el,+el.dataset.target));
+    const c=document.getElementById('copiesCounter');if(c)animCount(c,30);
+  }
+},{threshold:.3}).observe(document.getElementById('counter'));
+
+
+// ─── СЛАЙДЕР ЦИТАТ ───
+// cur — текущий индекс слайда (0, 1, ...)
+// total — сколько всего "страниц" (по 2 карточки на страницу)
+const track=document.getElementById('quoteTrack');
+let cur=0; const total=Math.ceil(track.querySelectorAll('.quote-card').length/2);
+// Пересчитываем смещение и двигаем слайдер через CSS transform
+function updateQ(){const w=track.querySelectorAll('.quote-card')[0].offsetWidth+10;track.style.transform=`translateX(-${cur*(w*2+32)}px)`;}
+document.getElementById('quoteNext').onclick=()=>{cur=(cur+1)%total;updateQ();};
+document.getElementById('quotePrev').onclick=()=>{cur=(cur-1+total)%total;updateQ();};
+window.addEventListener('resize',updateQ);
+
+
+// ─── ДАННЫЕ МОНСТРОВ (массив объектов) ───
+// Каждый объект = один монстр с полями:
+// name, games (массив игр), img, danger/speed/aggro — характеристики
+const MONSTERS = [
+  { name:"Упырь",
+    games:["2033","ll","ex"], gameLabel:"Вся трилогия", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-nosalis.jpg",
+    latin:"Nosalis sanguinarius",
+    desc:"Во многих народных мифах и сказаниях упоминаются упыри — покойники, встающие по ночам из могилы, вредящие людям и скоту. Подобно вампирам, упыри любят пить кровь, кусая свою жертву за шею, за счёт чего их также прозвали «кровососами».",
+    danger:75, speed:88, aggro:95,
+    loc:"Туннели метро Москвы и Новосибирске"},
+
+  { name:"Страж",
+    games:["2033","ll","ex"], gameLabel:"Вся трилогия", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-watchman.jpg",
+    latin:"Custos tunnelis",
+    danger:80, speed:85, aggro:55,
+    loc:"Туннели метро · Поверхность",
+    desc:"После войны стражи стали одним из самых первых видов мутантов, расплодившихся в Москве. Согласно большинству фактов, стражи произошли от крыс, на что указывает характерный хвост. Однако некоторые считают, что «предками» этих тварей могли быть собаки или представители семейства кошачьих." },
+
+  { name:"Библиотекарь",
+    games:["2033","ll"], gameLabel:"2033 / Last Light", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-Librarian.jpg",
+    latin:"Bibliothecarius giganteus",
+    danger:95, speed:72, aggro:50,
+    loc:"Библиотека Ленина · Полис",
+    desc:"Огромный мутировавший примат из Библиотеки Ленина. Умён и любопытен — не атакует если не смотреть в глаза. Один из самых опасных и запоминающихся врагов серии." },
+
+  { name:"Демон",
+    games:["2033","ll","ex"], gameLabel:"Вся трилогия", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-demon.jpg",
+    latin:"Daemonus volans",
+    danger:90, speed:96, aggro:82,
+    loc:"Открытые пространства",
+    desc:"Гигантское летающее существо размером с небольшой самолёт. Пикирует на жертву с большой высоты и уносит в когтях. Встреча на поверхности — почти верная гибель." },
+
+  { name:"Паук",
+    games:["2033","ll","ex"], gameLabel:"Вся трилогия", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-spider.jpg",
+    latin:"Arachnus radioactivus",
+    danger:60, speed:90, aggro:80,
+    loc:"Тёмные туннели · Заброшенные станции",
+    desc:"Мутировавший паук размером с собаку. Прячется в темноте и нападает группами. Быстрый и юркий — опасен именно своим количеством и стремительностью атаки." },
+
+  { name:"Медведь",
+    games:["ll","ex"], gameLabel:"Last Light / Exodus", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-bear-old-version.jpg",
+    latin:"Ursus mutatus sibiricus",
+    danger:92, speed:65, aggro:88,
+    loc:"Тайга · Красная площадь",
+    desc:"Огромный радиоактивный медведь из сибирской тайги. Покрыт наростами от радиации. Невероятно живучий — выдерживает десятки попаданий. Самый страшный зверь в Exodus." },
+
+  { name:"Царь-Рыба",
+    games:["ex"], gameLabel:"Exodus", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-catfish.jpg",
+    latin:"Silurus rex volgaensis",
+    danger:85, speed:55, aggro:78,
+    loc:"Река Волга",
+    desc:"Гигантский мутировавший сом, живущий в Волге. Переворачивает лодки и атакует с воды. Местные жители считают его хозяином реки. Столкновение с ним — один из самых эпичных моментов Exodus." },
+
+  { name:"Зверочеловек",
+    games:["ex"], gameLabel:"Exodus", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-humanimal.jpg",
+    latin:"Humanimalis ferus",
+    danger:70, speed:40, aggro:60,
+    loc:"Туннели · Поверхность",
+    desc:"На первый взгляд они напоминают людей. Однако, стоит вам подойти поближе, и вы столкнетесь с опасными агрессивными тварями, которые сразу же на вас набросятся. По одиночке опасности не представляют." },
+
+  { name:"Кикимора",
+    games:["2033","ll","ex"], gameLabel:"Вся трилогия", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-lurker.jpg",
+    latin:"Lurkerus necrophagus",
+    danger:40, speed:95, aggro:70,
+    loc:"Туннели метро · Поверхность",
+    desc:"Мутант-падальщик, пожирающий трупы. Группы людей они стараются обходить и при их виде сразу прячутся в норы, однако с лёгкостью могут напасть на одинокого путника." },
+
+  { name:"Креветка",
+    games:["2033","ll","ex"], gameLabel:"Вся трилогия", color:"#c8822a",
+    img:"img/anastasiia-tkach-m35-con-prop-diary-mutants-aqua-male.jpg",
+    latin:"Crustaceus aquaticus",
+    danger:80, speed:80, aggro:78,
+    loc:"Водные объекты",
+    desc:"Мутировавшие ракообразные, защищённые крепким панцирем, которые живут у воды и крайне агрессивно защищают свои территории. ." },
+];
+
+
+// Функция цвета опасности: красный=90+, оранжевый=70+, жёлтый=50+, зелёный<50
+const DANGER_COL = d => d>=90?'#e74c3c':d>=70?'#e67e22':d>=50?'#f1c40f':'#27ae60';
+
+
+// ─── ФУНКЦИЯ ОТРИСОВКИ КАРТОЧЕК МОНСТРОВ ───
+// f — фильтр по игре ("all", "2033", "ll", "ex")
+function renderMonsters(f){
+  const g = document.getElementById('monstersGrid');
+  g.innerHTML = '';
+  const list = f==='all' ? MONSTERS : MONSTERS.filter(m=>m.games.includes(f));
+  list.forEach((m,i)=>{
+    const dc = DANGER_COL(m.danger);
+    const card = document.createElement('div');
+    card.className = 'monster-card reveal';
+    card.style.cssText = `transition-delay:${i%4*.08}s;border-left-color:${m.color}`;
+    card.innerHTML = `
+      <div class="monster-img">
+        <img src="${m.img}" alt="${m.name}"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="monster-img-fb">
+          <svg viewBox="0 0 120 80" width="100" opacity=".15"><ellipse cx="60" cy="35" rx="25" ry="28" fill="${m.color}"/><line x1="60" y1="63" x2="45" y2="80" stroke="${m.color}" stroke-width="4"/><line x1="60" y1="63" x2="75" y2="80" stroke="${m.color}" stroke-width="4"/><line x1="35" y1="42" x2="10" y2="52" stroke="${m.color}" stroke-width="4"/><line x1="85" y1="42" x2="110" y2="52" stroke="${m.color}" stroke-width="4"/></svg>
+        </div>
+        <div class="monster-img-grad"></div>
+      </div>
+      <div class="monster-body">
+        <span class="monster-gtag" style="border-color:${m.color};color:${m.color}">${m.gameLabel}</span>
+        <div class="monster-name" style="color:${m.color}">${m.name}</div>
+        <div class="monster-latin">${m.latin}</div>
+        <div class="monster-desc">${m.desc}</div>
+        <div class="monster-stats">
+          <div class="mstat">УГРОЗА <span>${m.danger}</span><div class="mstat-bar"><div class="mstat-fill" data-w="${m.danger}" style="background:var(--amber-dim)"></div></div></div>
+          <div class="mstat">СКОРОСТЬ <span>${m.speed}</span><div class="mstat-bar"><div class="mstat-fill" data-w="${m.speed}" style="background:var(--amber-dim)"></div></div></div>
+          <div class="mstat">АГРЕССИЯ <span>${m.aggro}</span><div class="mstat-bar"><div class="mstat-fill" data-w="${m.aggro}" style="background:var(--amber-dim)"></div></div></div>
+        </div>
+        <div class="monster-loc">📍 <b>${m.loc}</b></div>
+      </div>`;
+    g.appendChild(card);
+    mainObserver.observe(card);
+  });
+  new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting) e.target.querySelectorAll('.mstat-fill').forEach(b=>b.style.width=b.dataset.w+'%');});
+  },{threshold:.25}).observe(document.getElementById('monstersGrid'));
+}
+
+
+
+// Первоначальная отрисовка всех монстров
+renderMonsters('all');
+
+// Обработчики кнопок фильтра монстров
+document.querySelectorAll('[data-mf]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-mf]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderMonsters(btn.dataset.mf);
+  });
+});
+
+
+// ─── ПАРАЛЛАКС ТОННЕЛЯ ───
+// При прокрутке страницы кольца тоннеля
+// двигаются медленнее страницы и постепенно исчезают
+window.addEventListener('scroll',()=>{
+  const t=document.querySelector('.tunnel');
+  if(t){const y=window.scrollY;t.style.transform=`translateY(calc(-50% + ${y*.2}px))`;t.style.opacity=Math.max(0,1-y/600);}
+});
+</script>
+</body>
+</html>
